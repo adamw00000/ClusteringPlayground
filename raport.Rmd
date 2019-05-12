@@ -1,0 +1,250 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+# PDRPy - Praca domowa nr 2
+
+```{R, echo = FALSE, message=FALSE}
+load_results <- function()
+{
+  dataBasePath <- file.path(getwd(), "MySpectralClustering", "output")
+  dirs <- list.dirs(dataBasePath)
+  
+  result_collection <- list()
+  standardized_result_collection <- list()
+  
+  for (i in 2:length(dirs))
+  {
+    dirFiles <- list.files(dirs[i], pattern = ".*\\.csv")
+    absoluteFiles <- file.path(dirs[i], dirFiles)
+    
+    dirData <- list()
+    for (j in 1:length(absoluteFiles))
+    {
+      fileData <- read.csv(absoluteFiles[j], sep = "")
+    
+      name <- basename(absoluteFiles[j])
+      name <- tools::file_path_sans_ext(name)
+      dirData[[name]] <- fileData[[1]]
+    }
+    
+    if (stringi::stri_detect_fixed(dirs[i], "_standardized"))
+    {
+      standardized_result_collection <- c(standardized_result_collection, list(dirData))
+    }
+    else
+    {
+      result_collection <- c(result_collection, list(dirData))
+    }
+  }
+  results <- list(normal = result_collection, standardized = standardized_result_collection)
+}
+
+load_results_data <- function(results)
+{
+  load_results_data_helper <- function(resultList)
+  {
+    for (i in 1:length(resultList))
+    {
+      baseDir <- file.path(getwd(), "MySpectralClustering", "benchmark")
+      
+      dataFile <- resultList[[i]]$data_file[[1]]
+      data <- read.csv(file.path(baseDir, dataFile), sep = '', header = FALSE)
+      resultList[[i]][["data"]] <- data
+    }
+    resultList
+  }
+  results$normal <- load_results_data_helper(results$normal)
+  results$standardized <- load_results_data_helper(results$standardized)
+  
+  results
+}
+
+calculate_indices <- function(results)
+{
+  constructIndexList <- function(resultList)
+  {
+    indexList <- list()
+    for (i in 1)
+    {
+      resultSet <- resultList[[i]]
+      for (j in 1:length(resultSet))
+      {
+        name <- names(resultSet)[j]
+        if (!stringi::stri_detect_regex(name, "(data_file)|(data)|(expert)"))
+        {
+          l <- list(randIndex = list(), fmIndex = list())
+          indexList[[name]] <- list(normal=l, standardized=l)
+        }
+      }
+    }
+    indexList
+  }
+  
+  calculate_indices_helper <- function(resultList, indexList, standarized)
+  {
+    for (i in 1:length(resultList))
+    {
+      resultSet <- resultList[[i]]
+      for (j in 1:length(resultSet))
+      {
+        name <- names(resultSet)[j]
+        if (!stringi::stri_detect_regex(name, "(data_file)|(data)|(expert)"))
+        {
+          randIndex <- mclust::adjustedRandIndex(resultSet$expert, resultSet[[name]])
+          fmIndex <- as.numeric(dendextend::FM_index(resultSet$expert, resultSet[[name]]))
+          
+          if (!standarized)
+          {
+            indexList[[name]]$normal$randIndex[[i]] <- randIndex
+            indexList[[name]]$normal$fmIndex[[i]] <- fmIndex
+          }
+          else
+          {
+            indexList[[name]]$standardized$randIndex[[i]] <- randIndex
+            indexList[[name]]$standardized$fmIndex[[i]] <- fmIndex
+          }
+        }
+      }
+    }
+    indexList
+  }
+  
+  indexList <- constructIndexList(results$normal)
+  indexList <- calculate_indices_helper(results$normal, indexList, FALSE)
+  indexList <- calculate_indices_helper(results$standardized, indexList, TRUE)
+  indexList
+}
+
+results <- load_results()
+results <- load_results_data(results)
+
+indices <- calculate_indices(results)
+```
+
+## Zagregowane indeksy Randa i FM
+
+### Średnie
+
+```{r, echo=FALSE, message=FALSE, results='asis'}
+aggregateIndices <- function(indices, operation = mean)
+{
+  resultMatrix <- matrix(nrow = length(indices), ncol = 4)
+  row.names(resultMatrix) <- character(length(indices))
+  colnames(resultMatrix) <- c("Rand index", "Rand index - standardized",
+                              "FM index", "FM index - standardized")
+  
+  for (i in 1:length(indices))
+  {
+    algorithm_name <- names(indices)[i]
+    
+    normalIndices <- indices[[i]]$normal
+    standardizedIndices <- indices[[i]]$standardized
+    
+    row.names(resultMatrix)[i] <- algorithm_name
+    
+    resultMatrix[i, 1] = operation(unlist(normalIndices$randIndex))
+    resultMatrix[i, 2] = operation(unlist(standardizedIndices$randIndex))
+    resultMatrix[i, 3] = operation(unlist(normalIndices$fmIndex))
+    resultMatrix[i, 4] = operation(unlist(standardizedIndices$fmIndex))
+  }
+  df <- as.data.frame(resultMatrix)
+  resultMatrix <- as.matrix(df[order(df[[1]], decreasing = TRUE),])
+  
+  resultMatrix
+}
+
+knitr::kable(aggregateIndices(indices, mean))
+```
+
+### Odchylenia standardowe
+
+```{r, echo=FALSE, message=FALSE, results='asis'}
+knitr::kable(aggregateIndices(indices, sd))
+```
+
+```{r, echo=FALSE}
+boxplotIndices <- function(indices)
+{
+  resultMatrix <- matrix(nrow = length(indices), ncol = 4)
+  row.names(resultMatrix) <- character(length(indices))
+  colnames(resultMatrix) <- c("Rand index", "Rand index - standardized",
+                              "FM index", "FM index - standardized")
+  
+  for (i in 1:length(indices))
+  {
+    algorithm_name <- names(indices)[i]
+    
+    normalIndices <- indices[[i]]$normal
+    standardizedIndices <- indices[[i]]$standardized
+    
+    row.names(resultMatrix)[i] <- algorithm_name
+    
+    resultMatrix[i, 1] = operation(unlist(normalIndices$randIndex))
+    resultMatrix[i, 2] = operation(unlist(standardizedIndices$randIndex))
+    resultMatrix[i, 3] = operation(unlist(normalIndices$fmIndex))
+    resultMatrix[i, 4] = operation(unlist(standardizedIndices$fmIndex))
+  }
+  df <- as.data.frame(resultMatrix)
+  resultMatrix <- as.matrix(df[order(df[[1]], decreasing = TRUE),])
+  
+  resultMatrix
+}
+```
+
+## Wyniki
+
+### Dane surowe
+
+```{r, echo=FALSE, message=FALSE}
+plot_results <- function(resultsCollection) 
+{
+  for (i in 1:length(resultsCollection))
+  {
+    resultSet <- resultsCollection[[i]]
+    
+    data <- resultSet$data
+    
+    create_plot <- function(data, dataFile, name, expertLabels, labels)
+    {
+      randIndex <- round(mclust::adjustedRandIndex(expertLabels, labels), 2)
+      fmIndex <- as.numeric(round(dendextend::FM_index(expertLabels, labels), 2))
+        
+      library(ggplot2)
+      #if (length(data) == 2)
+      #{
+        plot(data[[1]], data[[2]], col=labels,  xlab = "", ylab = "",
+                           main = paste(dataFile, "\n", 
+                                  name, 
+                                  "\nRand index:", randIndex, ", FM index:", fmIndex))
+      #}
+      #else if (length(data) == 3)
+      #{
+        
+      #}
+    }
+    
+    par(mfrow=c(1, 1))
+    create_plot(data, resultSet$data_file, "expert", resultSet$expert, resultSet$expert)
+    
+    par(mfrow=c(2, 2))
+    
+    for (j in 1:length(resultSet))
+    {
+      name <- names(resultSet)[j]
+      if (!stringi::stri_detect_regex(name, "(data_file)|(data)|(expert)"))
+      {
+        create_plot(data, resultSet$data_file, name, resultSet$expert, resultSet[[j]])
+      }
+    }
+  }
+}
+
+#plot_results(results$normal)
+```
+
+### Dane ustandaryzowane
+```{r, echo=FALSE, message=FALSE}
+#plot_results(results$standardized)
+```
