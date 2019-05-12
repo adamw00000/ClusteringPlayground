@@ -5,10 +5,46 @@ output:
 ---
 # PDRPy - Praca domowa nr 2
 
+## Wstęp
+
+Zadanie polegało na zaimplementowaniu algorytmu spektralnego analizy skupień z użyciem Rcpp oraz porównaniu go z innymi algorytmami zapewnianymi przez R oraz dostępnymi na CRAN. Zbiór przetestowanych algorytmów obejmuje:
+
+* **Algorytm spektralny** z parametrem M:
+    * M = 2 - *spectral_M2*
+    * M = 5 - *spectral_M5*
+    * M = 10 - *spectral_M10*
+    * M = 20 - *spectral_M20*
+    * M = k, gdzie k jest oczekiwaną liczbą skupień - *spectral_Mk*
+* **Algorytm k-średnich** z pakietu wbudowanego stats - *kmeans*
+* **Algorytm hierarchiczny hclust** z pakietu wbudowanego stats:
+    * różne sposoby tworzenie dendrogramu - *hclust_ward.D, hclust_ward.D2, hclust_single, hclust_complete, hclust_average,hclust_mcquitty, hclust_median, hclust_centroid*
+* **Algorytm hclust2** z pakietu CRAN genie z parametrem gini (0 - 1):
+    * gini = 0.2 - *genie_0.2*
+    * gini = 0.3 (wartość domyślna) - *genie_0.3*
+    * gini = 0.5 - *genie_0.5*
+    * gini = 0.8 - *genie_0.8*
+* **Algorytm Fuzzy C-Means** - z parametrem fuzzyfier (> 1):
+    * fuzzyfier = 1.5 (wartość domyślna) - *fuzzy_default*
+    * fuzzyfier = 2 - *fuzzy_2*
+    * fuzzyfier = 5 - *fuzzy_5*
+    * fuzzyfier = 10 - *fuzzy_10*
+    
+Skrótowe nazwy pojawiające się w powyższym będą używane do identyfikacji algorytmów również dalej.
+
+## Algorytm spektralny
+
+Implementacja algorytmu spektralnego została zrealizowana jako pakiet R. Aby móc go używać, należy zbudować oraz zainstalować projekt zawarty w folderze **MySpectralClustering**. W implementacji funkcji `Mnn()` z uwagi na jak największą wydajność algorytmu została wykorzystana zewnętrzna implementacja kd-drzewa dostępna pod licencją MIT na [githubie](https://github.com/gishi523/kd-tree). Z tego samego względu w Rcpp zostały zaimplementowane fragmenty pozostałych funkcji. Szczegółowe testy tej metody zostały opisane w dokumencie **testy.pdf**.
+
+## Pozostałe elementy rozwiązania
+
+Foldery **benchmark** oraz **my_benchmark** zawierają odpowiednio dołączone do zadania zbiory benchmarkowe oraz zbiory wygenerowane jako część rozwiązania zadania (zostały one wygenerowane za pomocą plików **graph.R, labirynth.R oraz windows.R**). Uruchamianie zaimplementowanych algorytmów jest realizowane w pliku **benchmark_executor.R**. Uzyskane wyniki znajdują się odpowiednio w folderach **output** oraz **my_benchmark_output**, podzielone względem algorytmów. Wizualizacja wszystkich wyników jest załączona w pliku **full_results.html**. W dalszej części tego dokumentu skupię się na zebraniu w całość i opracowaniu wyników otrzymanych dla załączonych danych benchmarkowych.
+
+# Opracowanie wyników
+
 ```{R, echo = FALSE, message=FALSE}
 load_results <- function()
 {
-  dataBasePath <- file.path(getwd(), "MySpectralClustering", "output")
+  dataBasePath <- file.path(getwd(), "output")
   dirs <- list.dirs(dataBasePath)
   
   result_collection <- list()
@@ -47,7 +83,7 @@ load_results_data <- function(results)
   {
     for (i in 1:length(resultList))
     {
-      baseDir <- file.path(getwd(), "MySpectralClustering", "benchmark")
+      baseDir <- file.path(getwd(), "benchmark")
       
       dataFile <- resultList[[i]]$data_file[[1]]
       data <- read.csv(file.path(baseDir, dataFile), sep = '', header = FALSE)
@@ -82,7 +118,7 @@ calculate_indices <- function(results)
     indexList
   }
   
-  calculate_indices_helper <- function(resultList, indexList, standarized)
+  calculate_indices_helper <- function(resultList, indexList, standardized)
   {
     for (i in 1:length(resultList))
     {
@@ -95,7 +131,7 @@ calculate_indices <- function(results)
           randIndex <- mclust::adjustedRandIndex(resultSet$expert, resultSet[[name]])
           fmIndex <- as.numeric(dendextend::FM_index(resultSet$expert, resultSet[[name]]))
           
-          if (!standarized)
+          if (!standardized)
           {
             indexList[[name]]$normal$randIndex[[i]] <- randIndex
             indexList[[name]]$normal$fmIndex[[i]] <- fmIndex
@@ -117,10 +153,45 @@ calculate_indices <- function(results)
   indexList
 }
 
+calculate_indices_df <- function(results)
+{
+  indices <- data.frame()
+  
+  calculate_indices_helper <- function(resultList, indices, standardized)
+  {
+    for (i in 1:length(resultList))
+    {
+      resultSet <- resultList[[i]]
+      for (j in 1:length(resultSet))
+      {
+        name <- names(resultSet)[j]
+        if (!stringi::stri_detect_regex(name, "(data_file)|(data)|(expert)"))
+        {
+          randIndex <- mclust::adjustedRandIndex(resultSet$expert, resultSet[[name]])
+          fmIndex <- as.numeric(dendextend::FM_index(resultSet$expert, resultSet[[name]]))
+          
+          indices <- rbind(indices, data.frame(Algorithm = name, Standardized = standardized,
+                                               FileId = i, Index = "rand",
+                                               Value = randIndex))
+          indices <- rbind(indices, data.frame(Algorithm = name, Standardized = standardized,
+                                               FileId = i, Index = "fm",
+                                               Value = fmIndex))
+        }
+      }
+    }
+    indices
+  }
+  
+  indices <- calculate_indices_helper(results$normal, indices, FALSE)
+  indices <- calculate_indices_helper(results$standardized, indices, TRUE)
+  indices
+}
+
 results <- load_results()
 results <- load_results_data(results)
 
-indices <- calculate_indices(results)
+indices <- calculate_indices_df(results)
+#indices <- calculate_indices(results)
 ```
 
 ## Zagregowane indeksy Randa i FM
@@ -128,69 +199,94 @@ indices <- calculate_indices(results)
 ### Średnie
 
 ```{r, echo=FALSE, message=FALSE, results='asis'}
-aggregateIndices <- function(indices, operation = mean)
-{
-  resultMatrix <- matrix(nrow = length(indices), ncol = 4)
-  row.names(resultMatrix) <- character(length(indices))
-  colnames(resultMatrix) <- c("Rand index", "Rand index - standardized",
-                              "FM index", "FM index - standardized")
-  
-  for (i in 1:length(indices))
-  {
-    algorithm_name <- names(indices)[i]
-    
-    normalIndices <- indices[[i]]$normal
-    standardizedIndices <- indices[[i]]$standardized
-    
-    row.names(resultMatrix)[i] <- algorithm_name
-    
-    resultMatrix[i, 1] = operation(unlist(normalIndices$randIndex))
-    resultMatrix[i, 2] = operation(unlist(standardizedIndices$randIndex))
-    resultMatrix[i, 3] = operation(unlist(normalIndices$fmIndex))
-    resultMatrix[i, 4] = operation(unlist(standardizedIndices$fmIndex))
-  }
-  df <- as.data.frame(resultMatrix)
-  resultMatrix <- as.matrix(df[order(df[[1]], decreasing = TRUE),])
-  
-  resultMatrix
-}
+library(dplyr)
 
-knitr::kable(aggregateIndices(indices, mean))
+# aggregateIndices <- function(indices, operation = mean)
+# {
+#   resultMatrix <- matrix(nrow = length(indices), ncol = 4)
+#   row.names(resultMatrix) <- character(length(indices))
+#   colnames(resultMatrix) <- c("Rand index", "Rand index - standardized",
+#                               "FM index", "FM index - standardized")
+#   
+#   for (i in 1:length(indices))
+#   {
+#     algorithm_name <- names(indices)[i]
+#     
+#     normalIndices <- indices[[i]]$normal
+#     standardizedIndices <- indices[[i]]$standardized
+#     
+#     row.names(resultMatrix)[i] <- algorithm_name
+#     
+#     resultMatrix[i, 1] = operation(unlist(normalIndices$randIndex))
+#     resultMatrix[i, 2] = operation(unlist(standardizedIndices$randIndex))
+#     resultMatrix[i, 3] = operation(unlist(normalIndices$fmIndex))
+#     resultMatrix[i, 4] = operation(unlist(standardizedIndices$fmIndex))
+#   }
+#   df <- as.data.frame(resultMatrix)
+#   resultMatrix <- as.matrix(df[order(df[[1]], decreasing = TRUE),])
+#   
+#   resultMatrix
+# }
+
+aggregateIndices_df <- function(indices, operation = mean)
+{
+  randNormal <- indices %>%
+      filter(Index == "rand" & Standardized == TRUE) %>%
+      group_by(Algorithm) %>%
+      summarize("RA" = round(operation(Value), 2))
+  randSt <- indices %>%
+      filter(Index == "rand" & Standardized == FALSE) %>%
+      group_by(Algorithm) %>%
+      summarize("RA - standardized" = round(operation(Value), 2))
+  fmNormal <- indices %>%
+      filter(Index == "fm" & Standardized == TRUE) %>%
+      group_by(Algorithm) %>%
+      summarize("FM" = round(operation(Value), 2))
+  fmSt <- indices %>%
+      filter(Index == "fm" & Standardized == FALSE) %>%
+      group_by(Algorithm) %>%
+      summarize("FM - standardized" = round(operation(Value), 2))
+
+  resultView <- randNormal %>%
+    inner_join(randSt) %>%
+    inner_join(fmNormal) %>%
+    inner_join(fmSt) %>%
+    arrange(-RA)
+
+  #as.matrix(resultView)
+  resultView
+}
+# 
+# #knitr::kable(aggregateIndices(indices, mean))
+knitr::kable(aggregateIndices_df(indices, mean))
 ```
 
 ### Odchylenia standardowe
 
 ```{r, echo=FALSE, message=FALSE, results='asis'}
-knitr::kable(aggregateIndices(indices, sd))
+#knitr::kable(aggregateIndices(indices, sd))
+knitr::kable(aggregateIndices_df(indices, sd))
 ```
 
 ```{r, echo=FALSE}
 boxplotIndices <- function(indices)
 {
-  resultMatrix <- matrix(nrow = length(indices), ncol = 4)
-  row.names(resultMatrix) <- character(length(indices))
-  colnames(resultMatrix) <- c("Rand index", "Rand index - standardized",
-                              "FM index", "FM index - standardized")
+  randNormal <- indices %>%
+      filter(Index == "rand" & Standardized == TRUE)
+  bpm <- with(randNormal, reorder(Algorithm, -Value, FUN = median))
   
-  for (i in 1:length(indices))
-  {
-    algorithm_name <- names(indices)[i]
-    
-    normalIndices <- indices[[i]]$normal
-    standardizedIndices <- indices[[i]]$standardized
-    
-    row.names(resultMatrix)[i] <- algorithm_name
-    
-    resultMatrix[i, 1] = operation(unlist(normalIndices$randIndex))
-    resultMatrix[i, 2] = operation(unlist(standardizedIndices$randIndex))
-    resultMatrix[i, 3] = operation(unlist(normalIndices$fmIndex))
-    resultMatrix[i, 4] = operation(unlist(standardizedIndices$fmIndex))
-  }
-  df <- as.data.frame(resultMatrix)
-  resultMatrix <- as.matrix(df[order(df[[1]], decreasing = TRUE),])
+  par(mar=c(7,5,1,1))
+  boxplot(Value ~ bpm, data = randNormal, las = 2, xlab = "", ylab = "Rand index value")
   
-  resultMatrix
+  randSt <- indices %>%
+      filter(Index == "rand" & Standardized == FALSE)
+  fmNormal <- indices %>%
+      filter(Index == "fm" & Standardized == TRUE)
+  fmSt <- indices %>%
+      filter(Index == "fm" & Standardized == FALSE)
+  
 }
+boxplotIndices(indices)
 ```
 
 ## Wyniki

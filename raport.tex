@@ -1,0 +1,201 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{longtable,booktabs}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\providecommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{}
+    \pretitle{\vspace{\droptitle}}
+  \posttitle{}
+    \author{}
+    \preauthor{}\postauthor{}
+    \date{}
+    \predate{}\postdate{}
+  
+
+\begin{document}
+
+\section{PDRPy - Praca domowa nr 2}\label{pdrpy---praca-domowa-nr-2}
+
+\subsection{Zagregowane indeksy Randa i
+FM}\label{zagregowane-indeksy-randa-i-fm}
+
+\subsubsection{Ĺšrednie}\label{lsrednie}
+
+\begin{longtable}[]{@{}lrrrr@{}}
+\toprule
+& Rand index & Rand index - standardized & FM index & FM index -
+standardized\tabularnewline
+\midrule
+\endhead
+genie\_0.3 & 0.8093213 & 0.7952155 & 0.8673512 &
+0.8562160\tabularnewline
+genie\_0.2 & 0.7983969 & 0.7835541 & 0.8651187 &
+0.8531928\tabularnewline
+genie\_0.5 & 0.7983025 & 0.7829162 & 0.8604087 &
+0.8531160\tabularnewline
+hclust\_wardD & 0.6339054 & 0.6193307 & 0.7815397 &
+0.7728157\tabularnewline
+fuzzy\_default & 0.5985833 & 0.5585773 & 0.7599142 &
+0.7296327\tabularnewline
+hclust\_wardD2 & 0.5869004 & 0.5839302 & 0.7633283 &
+0.7611446\tabularnewline
+fuzzy\_2 & 0.5862337 & 0.5569166 & 0.7498251 & 0.7283557\tabularnewline
+hclust\_average & 0.5818682 & 0.5445981 & 0.7774677 &
+0.7593201\tabularnewline
+genie\_0.8 & 0.5698238 & 0.5400683 & 0.7637017 &
+0.7526946\tabularnewline
+kmeans & 0.5526685 & 0.5133684 & 0.7242594 & 0.7037940\tabularnewline
+hclust\_centroid & 0.5306081 & 0.4267549 & 0.7665153 &
+0.7252151\tabularnewline
+hclust\_complete & 0.5213857 & 0.4841601 & 0.7344240 &
+0.7052593\tabularnewline
+hclust\_mcquitty & 0.5102214 & 0.4899308 & 0.7198768 &
+0.7064903\tabularnewline
+spectral\_Mk & 0.4913388 & 0.5168094 & 0.6904237 &
+0.6939454\tabularnewline
+spectral\_M10 & 0.4867085 & 0.4834311 & 0.6672290 &
+0.6783180\tabularnewline
+hclust\_median & 0.4830778 & 0.3758308 & 0.7018317 &
+0.6719482\tabularnewline
+hclust\_single & 0.4746317 & 0.4493316 & 0.7294833 &
+0.7190368\tabularnewline
+spectral\_M20 & 0.4717544 & 0.4821291 & 0.6644585 &
+0.6681386\tabularnewline
+spectral\_M5 & 0.4690436 & 0.4923903 & 0.6633711 &
+0.6802757\tabularnewline
+fuzzy\_5 & 0.4618184 & 0.4279836 & 0.6471424 & 0.6226653\tabularnewline
+fuzzy\_10 & 0.4481178 & 0.4269381 & 0.6364845 & 0.6232956\tabularnewline
+spectral\_M2 & 0.3179249 & 0.3646710 & 0.5762981 &
+0.5867067\tabularnewline
+\bottomrule
+\end{longtable}
+
+\subsubsection{Odchylenia standardowe}\label{odchylenia-standardowe}
+
+\begin{longtable}[]{@{}lrrrr@{}}
+\toprule
+& Rand index & Rand index - standardized & FM index & FM index -
+standardized\tabularnewline
+\midrule
+\endhead
+hclust\_single & 0.4356553 & 0.4384972 & 0.2402862 &
+0.2426036\tabularnewline
+genie\_0.8 & 0.4047805 & 0.4168118 & 0.2247797 &
+0.2250069\tabularnewline
+hclust\_centroid & 0.3857390 & 0.3754615 & 0.1743469 &
+0.1608609\tabularnewline
+hclust\_average & 0.3701044 & 0.3708732 & 0.1808313 &
+0.1799328\tabularnewline
+hclust\_wardD2 & 0.3402335 & 0.3572204 & 0.1806137 &
+0.1896394\tabularnewline
+hclust\_complete & 0.3380663 & 0.3255163 & 0.1710417 &
+0.1639302\tabularnewline
+hclust\_wardD & 0.3344786 & 0.3401046 & 0.1857183 &
+0.1878137\tabularnewline
+fuzzy\_default & 0.3320177 & 0.3222439 & 0.1817340 &
+0.1754243\tabularnewline
+hclust\_mcquitty & 0.3319233 & 0.3183166 & 0.1715432 &
+0.1625418\tabularnewline
+fuzzy\_2 & 0.3265900 & 0.3275848 & 0.1796710 & 0.1785192\tabularnewline
+hclust\_median & 0.3161102 & 0.3269948 & 0.1673730 &
+0.1470067\tabularnewline
+kmeans & 0.3042093 & 0.3178012 & 0.1588942 & 0.1664223\tabularnewline
+spectral\_M10 & 0.2820491 & 0.3102590 & 0.1667887 &
+0.1694765\tabularnewline
+fuzzy\_10 & 0.2816638 & 0.2801918 & 0.1814535 & 0.1808211\tabularnewline
+spectral\_M20 & 0.2802085 & 0.3128944 & 0.1682261 &
+0.1859292\tabularnewline
+fuzzy\_5 & 0.2780467 & 0.2771205 & 0.1691505 & 0.1746607\tabularnewline
+genie\_0.5 & 0.2393434 & 0.2874893 & 0.1613863 &
+0.1846406\tabularnewline
+spectral\_M5 & 0.2382938 & 0.2533773 & 0.1455755 &
+0.1465363\tabularnewline
+genie\_0.2 & 0.2346437 & 0.2630948 & 0.1454990 &
+0.1644472\tabularnewline
+spectral\_Mk & 0.2330000 & 0.2066511 & 0.1224123 &
+0.1257998\tabularnewline
+genie\_0.3 & 0.2157801 & 0.2474490 & 0.1492426 &
+0.1687012\tabularnewline
+spectral\_M2 & 0.2089354 & 0.2181780 & 0.1252713 &
+0.1433714\tabularnewline
+\bottomrule
+\end{longtable}
+
+\subsection{Wyniki}\label{wyniki}
+
+\subsubsection{Dane surowe}\label{dane-surowe}
+
+\subsubsection{Dane ustandaryzowane}\label{dane-ustandaryzowane}
+
+
+\end{document}
