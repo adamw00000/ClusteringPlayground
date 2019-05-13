@@ -11,7 +11,7 @@ main <- function(benchmarkDir, outputDir, tests = -1)
   
   v <- if (tests == -1) 1:length(dataFiles) else tests
   
-  for (i in v)#6:6)#length(dataFiles))
+  for (i in v)
   {
     print("Files: ")
     print(dataFiles[i])
@@ -35,67 +35,81 @@ calculate <- function(outputDir, dataFile, i, data, expert_labels, k, standardiz
     data <- scale(data)
   
   attr(expert_labels, "algorithm") <- "expert"
+  # 
+  # my_spectral_labels_Mk <- spectral_clustering(data, k, k)
+  # my_spectral_labels_M2 <- spectral_clustering(data, k, 2)
+  # my_spectral_labels_M5 <- spectral_clustering(data, k, 5)
+  # my_spectral_labels_M10 <- spectral_clustering(data, k, 10)
+  # my_spectral_labels_M20 <- spectral_clustering(data, k, 20)
+  # my_spectral_labels_M8 <- spectral_clustering(data, k, 8)
+  # my_spectral_labels_M12 <- spectral_clustering(data, k, 12)
+  # my_spectral_labels_M15 <- spectral_clustering(data, k, 15)
+  # my_spectral_labels_M30 <- spectral_clustering(data, k, 30)
+  # 
+  # print("Spectral finished")
+  # 
+  # kmeans_labels <- kmeans_clustering(data, k)
+  # 
+  # print("k-means finished")
+  # 
+  # genie_default_labels <- genie_clustering(data, k, 0.3)
+  genie_0.1_labels <- genie_clustering(data, k, 0.1)
+  # genie_0.2_labels <- genie_clustering(data, k, 0.2)
+  # genie_0.5_labels <- genie_clustering(data, k, 0.5)
+  # genie_0.8_labels <- genie_clustering(data, k, 0.8)
+  # 
+  # print("genie finished")
+  # 
+  # fuzzy_default_labels <- fuzzy_clustering(data, k, 1.5)
+  # fuzzy_2_labels <- fuzzy_clustering(data, k, 2)
+  # fuzzy_5_labels <- fuzzy_clustering(data, k, 5)
+  # fuzzy_10_labels <- fuzzy_clustering(data, k, 10)
+  # 
+  # print("fuzzy finished")
+  # 
+  # hclust_average_labels <- hclust_average(data, k)
+  # hclust_centroid_labels <- hclust_centroid(data, k)
+  # hclust_centroid2_labels <- hclust_centroid2(data, k)
+  # hclust_complete_labels <- hclust_complete(data, k)
+  # hclust_mcquitty_labels <- hclust_mcquitty(data, k)
+  # hclust_median_labels <- hclust_median(data, k)
+  # hclust_single_labels <- hclust_single(data, k)
+  # hclust_wardD_labels <- hclust_wardD(data, k)
+  # hclust_wardD2_labels <- hclust_wardD2(data, k)
+  # 
+  # print("hclust finished")
   
-  my_spectral_labels_Mk <- spectral_clustering(data, k, k)
-  my_spectral_labels_M2 <- spectral_clustering(data, k, 2)
-  my_spectral_labels_M5 <- spectral_clustering(data, k, 5)
-  my_spectral_labels_M10 <- spectral_clustering(data, k, 10)
-  my_spectral_labels_M20 <- spectral_clustering(data, k, 20)
-  
-  print("Spectral finished")
-  
-  kmeans_labels <- kmeans_clustering(data, k)
-  
-  print("k-means finished")
-  
-  genie_default_labels <- genie_clustering(data, k, 0.3)
-  genie_0.2_labels <- genie_clustering(data, k, 0.2)
-  genie_0.5_labels <- genie_clustering(data, k, 0.5)
-  genie_0.8_labels <- genie_clustering(data, k, 0.8)
-  
-  print("genie finished")
-  
-  fuzzy_default_labels <- fuzzy_clustering(data, k, 1.5)
-  fuzzy_2_labels <- fuzzy_clustering(data, k, 2)
-  fuzzy_5_labels <- fuzzy_clustering(data, k, 5)
-  fuzzy_10_labels <- fuzzy_clustering(data, k, 10)
-  
-  print("fuzzy finished")
-  
-  hclust_average_labels <- hclust_average(data, k)
-  hclust_centroid_labels <- hclust_centroid(data, k)
-  hclust_complete_labels <- hclust_complete(data, k)
-  hclust_mcquitty_labels <- hclust_mcquitty(data, k)
-  hclust_median_labels <- hclust_median(data, k)
-  hclust_single_labels <- hclust_single(data, k)
-  hclust_wardD_labels <- hclust_wardD(data, k)
-  hclust_wardD2_labels <- hclust_wardD2(data, k)
-  
-  print("hclust finished")
-  
-  labels_collection <- list("expert" = expert_labels,
-                            "spectral_Mk" = my_spectral_labels_Mk, 
-                            "spectral_M2" = my_spectral_labels_M2, 
-                            "spectral_M5" = my_spectral_labels_M5,
-                            "spectral_M10" = my_spectral_labels_M10,
-                            "spectral_M20" = my_spectral_labels_M20,
-                            "kmeans" = kmeans_labels,
-                            "genie_0.3" = genie_default_labels, 
-                            "genie_0.2" = genie_0.2_labels,
-                            "genie_0.5" = genie_0.5_labels, 
-                            "genie_0.8" = genie_0.8_labels,
-                            "fuzzy_default" = fuzzy_default_labels, 
-                            "fuzzy_2" = fuzzy_2_labels,
-                            "fuzzy_5" = fuzzy_5_labels, 
-                            "fuzzy_10" = fuzzy_10_labels,
-                            "hclust_average" = hclust_average_labels, 
-                            "hclust_centroid" = hclust_centroid_labels,
-                            "hclust_complete" = hclust_complete_labels, 
-                            "hclust_mcquitty" = hclust_mcquitty_labels,
-                            "hclust_median" = hclust_median_labels, 
-                            "hclust_single" = hclust_single_labels,
-                            "hclust_wardD" = hclust_wardD_labels, 
-                            "hclust_wardD2" = hclust_wardD2_labels)
+  labels_collection <- list(
+                            "expert" = expert_labels,
+                            # "spectral_Mk" = my_spectral_labels_Mk, 
+                            # "spectral_M2" = my_spectral_labels_M2, 
+                            # "spectral_M5" = my_spectral_labels_M5,
+                            # "spectral_M10" = my_spectral_labels_M10,
+                            # "spectral_M20" = my_spectral_labels_M20,
+                            # "spectral_M8" = my_spectral_labels_M8,
+                            # "spectral_M12" = my_spectral_labels_M12,
+                            # "spectral_M15" = my_spectral_labels_M15,
+                            # "spectral_M30" = my_spectral_labels_M30
+                            # "kmeans" = kmeans_labels,
+                            # "genie_0.3" = genie_default_labels, 
+                             "genie_0.1" = genie_0.1_labels,
+                            # "genie_0.2" = genie_0.2_labels,
+                            # "genie_0.5" = genie_0.5_labels, 
+                            # "genie_0.8" = genie_0.8_labels,
+                            # "fuzzy_default" = fuzzy_default_labels, 
+                            # "fuzzy_2" = fuzzy_2_labels,
+                            # "fuzzy_5" = fuzzy_5_labels, 
+                            # "fuzzy_10" = fuzzy_10_labels,
+                            # "hclust_average" = hclust_average_labels, 
+                            # "hclust_centroid" = hclust_centroid_labels,
+                            # "hclust_centroid2" = hclust_centroid2_labels
+                            # "hclust_complete" = hclust_complete_labels, 
+                            # "hclust_mcquitty" = hclust_mcquitty_labels,
+                            # "hclust_median" = hclust_median_labels, 
+                            # "hclust_single" = hclust_single_labels,
+                            # "hclust_wardD" = hclust_wardD_labels, 
+                            # "hclust_wardD2" = hclust_wardD2_labels
+                            )
   
   save_results(outputDir, standardize, labels_collection, dataFile, i)
   display_results(data, dataFile, labels_collection)
@@ -200,6 +214,13 @@ hclust_median <- function(data, k)
 hclust_centroid <- function(data, k)
 {
   hclust_default(data, k, "centroid")
+}
+
+hclust_centroid2 <- function(data, k)
+{
+  result <- cutree(hclust(dist(data)^2, method = "centroid"), k)
+  attr(result, "algorithm") <- paste("hclust_", "centroid", sep="")
+  result
 }
 
 hclust_default <- function(data, k, m)

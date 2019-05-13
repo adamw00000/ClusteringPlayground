@@ -81,115 +81,258 @@
     \date{}
     \predate{}\postdate{}
   
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
 
 \begin{document}
 
 \section{PDRPy - Praca domowa nr 2}\label{pdrpy---praca-domowa-nr-2}
 
-\subsection{Zagregowane indeksy Randa i
+\subsection{Wstęp}\label{wstep}
+
+Zadanie polegało na zaimplementowaniu algorytmu spektralnego analizy
+skupień z użyciem Rcpp oraz porównaniu go z innymi algorytmami
+zapewnianymi przez R oraz dostępnymi na CRAN. Zbiór przetestowanych
+algorytmów obejmuje:
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Algorytm spektralny} z parametrem M:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    M = 2 - \emph{spectral\_M2}
+  \item
+    M = 5 - \emph{spectral\_M5}
+  \item
+    M = 10 - \emph{spectral\_M10}
+  \item
+    M = 20 - \emph{spectral\_M20}
+  \item
+    M = k, gdzie k jest oczekiwaną liczbą skupień - \emph{spectral\_Mk}
+  \end{itemize}
+\item
+  \textbf{Algorytm k-średnich} z pakietu wbudowanego stats -
+  \emph{kmeans}
+\item
+  \textbf{Algorytm hierarchiczny hclust} z pakietu wbudowanego stats:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    różne sposoby tworzenie dendrogramu - \emph{hclust\_ward.D,
+    hclust\_ward.D2, hclust\_single, hclust\_complete,
+    hclust\_average,hclust\_mcquitty, hclust\_median, hclust\_centroid}
+  \end{itemize}
+\item
+  \textbf{Algorytm hclust2} z pakietu CRAN genie z parametrem gini (0 -
+  1):
+
+  \begin{itemize}
+  \tightlist
+  \item
+    gini = 0.2 - \emph{genie\_0.2}
+  \item
+    gini = 0.3 (wartość domyślna) - \emph{genie\_0.3}
+  \item
+    gini = 0.5 - \emph{genie\_0.5}
+  \item
+    gini = 0.8 - \emph{genie\_0.8}
+  \end{itemize}
+\item
+  \textbf{Algorytm Fuzzy C-Means} z pakietu CRAN advclust - z parametrem
+  fuzzyfier (\textgreater{} 1):
+
+  \begin{itemize}
+  \tightlist
+  \item
+    fuzzyfier = 1.5 (wartość domyślna) - \emph{fuzzy\_default}
+  \item
+    fuzzyfier = 2 - \emph{fuzzy\_2}
+  \item
+    fuzzyfier = 5 - \emph{fuzzy\_5}
+  \item
+    fuzzyfier = 10 - \emph{fuzzy\_10}
+  \end{itemize}
+\end{itemize}
+
+Skrótowe nazwy pojawiające się w powyższym będą używane do identyfikacji
+algorytmów również dalej.
+
+\subsection{Algorytm spektralny}\label{algorytm-spektralny}
+
+Implementacja algorytmu spektralnego została zrealizowana jako pakiet R.
+Aby móc go używać, należy zbudować oraz zainstalować projekt zawarty w
+folderze \textbf{MySpectralClustering}. W implementacji funkcji
+\texttt{Mnn()} z uwagi na jak największą wydajność algorytmu została
+wykorzystana zewnętrzna implementacja kd-drzewa dostępna pod licencją
+MIT na \href{https://github.com/gishi523/kd-tree}{githubie}. Z tego
+samego względu w Rcpp zostały zaimplementowane fragmenty pozostałych
+funkcji. Szczegółowe testy tej metody zostały opisane w dokumencie
+\textbf{testy.pdf}.
+
+\subsection{Pozostałe elementy
+rozwiązania}\label{pozostae-elementy-rozwiazania}
+
+Foldery \textbf{benchmark} oraz \textbf{my\_benchmark} zawierają
+odpowiednio dołączone do zadania zbiory benchmarkowe oraz zbiory
+wygenerowane jako część rozwiązania zadania (zostały one wygenerowane za
+pomocą plików \textbf{graph.R, labirynth.R oraz windows.R}).
+Uruchamianie zaimplementowanych algorytmów jest realizowane w pliku
+\textbf{benchmark\_executor.R}. Uzyskane wyniki znajdują się odpowiednio
+w folderach \textbf{output} oraz \textbf{my\_benchmark\_output},
+podzielone względem algorytmów. Wizualizacja wszystkich wyników jest
+załączona w pliku \textbf{full\_results.html}. W dalszej części tego
+dokumentu skupię się na zebraniu w całość i opracowaniu wyników
+otrzymanych dla załączonych danych benchmarkowych.
+
+\subsection{Opracowanie wyników}\label{opracowanie-wynikow}
+
+Porównanie otrzymanych wyników zostanie wykonane za pomocą wyznaczonych
+dla każdego rozwiązania skorygowanego indeksu Randa \textbf{(AR)} oraz
+indeksu Fowlkesa-Mallowsa \textbf{(FM)}.
+
+\subsubsection{Zagregowane indeksy Randa i
 FM}\label{zagregowane-indeksy-randa-i-fm}
 
-\subsubsection{Ĺšrednie}\label{lsrednie}
+Dla dostarczonych danych benchmarkowych obliczone zostały średnie oraz
+odchylenia standardowe wartości indeksów AR i FM. Porównane zostały one
+również z wartościami tych indeksów dla danych ustandaryzowanych, z
+uwzględnieniem zmiany spowodowanej przez standardyzację. Zestawienie
+otrzymanych wyników znajduje się w poniższych tabelach. Zostały one
+posortowane poczynając od największych wartości dla indeksu AR i
+zaokrąglone do trzech cyfr po przecinku.
 
-\begin{longtable}[]{@{}lrrrr@{}}
+\begin{longtable}[]{@{}lrrlrrl@{}}
 \toprule
-& Rand index & Rand index - standardized & FM index & FM index -
-standardized\tabularnewline
+Algorithm & RA & RA - st. data & RA - difference & FM & FM - st. data &
+FM - difference\tabularnewline
 \midrule
 \endhead
-genie\_0.3 & 0.8093213 & 0.7952155 & 0.8673512 &
-0.8562160\tabularnewline
-genie\_0.2 & 0.7983969 & 0.7835541 & 0.8651187 &
-0.8531928\tabularnewline
-genie\_0.5 & 0.7983025 & 0.7829162 & 0.8604087 &
-0.8531160\tabularnewline
-hclust\_wardD & 0.6339054 & 0.6193307 & 0.7815397 &
-0.7728157\tabularnewline
-fuzzy\_default & 0.5985833 & 0.5585773 & 0.7599142 &
-0.7296327\tabularnewline
-hclust\_wardD2 & 0.5869004 & 0.5839302 & 0.7633283 &
-0.7611446\tabularnewline
-fuzzy\_2 & 0.5862337 & 0.5569166 & 0.7498251 & 0.7283557\tabularnewline
-hclust\_average & 0.5818682 & 0.5445981 & 0.7774677 &
-0.7593201\tabularnewline
-genie\_0.8 & 0.5698238 & 0.5400683 & 0.7637017 &
-0.7526946\tabularnewline
-kmeans & 0.5526685 & 0.5133684 & 0.7242594 & 0.7037940\tabularnewline
-hclust\_centroid & 0.5306081 & 0.4267549 & 0.7665153 &
-0.7252151\tabularnewline
-hclust\_complete & 0.5213857 & 0.4841601 & 0.7344240 &
-0.7052593\tabularnewline
-hclust\_mcquitty & 0.5102214 & 0.4899308 & 0.7198768 &
-0.7064903\tabularnewline
-spectral\_Mk & 0.4913388 & 0.5168094 & 0.6904237 &
-0.6939454\tabularnewline
-spectral\_M10 & 0.4867085 & 0.4834311 & 0.6672290 &
-0.6783180\tabularnewline
-hclust\_median & 0.4830778 & 0.3758308 & 0.7018317 &
-0.6719482\tabularnewline
-hclust\_single & 0.4746317 & 0.4493316 & 0.7294833 &
-0.7190368\tabularnewline
-spectral\_M20 & 0.4717544 & 0.4821291 & 0.6644585 &
-0.6681386\tabularnewline
-spectral\_M5 & 0.4690436 & 0.4923903 & 0.6633711 &
-0.6802757\tabularnewline
-fuzzy\_5 & 0.4618184 & 0.4279836 & 0.6471424 & 0.6226653\tabularnewline
-fuzzy\_10 & 0.4481178 & 0.4269381 & 0.6364845 & 0.6232956\tabularnewline
-spectral\_M2 & 0.3179249 & 0.3646710 & 0.5762981 &
-0.5867067\tabularnewline
+genie\_0.3 & 0.795 & 0.809 & {0.014} & 0.856 & 0.867 &
+{0.011}\tabularnewline
+genie\_0.2 & 0.784 & 0.798 & {0.014} & 0.853 & 0.865 &
+{0.012}\tabularnewline
+genie\_0.5 & 0.783 & 0.798 & {0.015} & 0.853 & 0.860 &
+{0.007}\tabularnewline
+hclust\_wardD & 0.619 & 0.634 & {0.015} & 0.773 & 0.782 &
+{0.009}\tabularnewline
+hclust\_wardD2 & 0.584 & 0.587 & {0.003} & 0.761 & 0.763 &
+{0.002}\tabularnewline
+fuzzy\_default & 0.559 & 0.599 & {0.04} & 0.730 & 0.760 &
+{0.03}\tabularnewline
+fuzzy\_2 & 0.557 & 0.586 & {0.029} & 0.728 & 0.750 &
+{0.022}\tabularnewline
+hclust\_average & 0.545 & 0.582 & {0.037} & 0.759 & 0.777 &
+{0.018}\tabularnewline
+genie\_0.8 & 0.540 & 0.570 & {0.03} & 0.753 & 0.764 &
+{0.011}\tabularnewline
+spectral\_M15 & 0.523 & 0.489 & {-0.034} & 0.688 & 0.676 &
+{-0.012}\tabularnewline
+spectral\_M12 & 0.518 & 0.534 & {0.016} & 0.692 & 0.708 &
+{0.016}\tabularnewline
+spectral\_Mk & 0.517 & 0.491 & {-0.026} & 0.694 & 0.690 &
+{-0.004}\tabularnewline
+kmeans & 0.513 & 0.553 & {0.04} & 0.704 & 0.724 & {0.02}\tabularnewline
+spectral\_M5 & 0.492 & 0.469 & {-0.023} & 0.680 & 0.663 &
+{-0.017}\tabularnewline
+hclust\_mcquitty & 0.490 & 0.510 & {0.02} & 0.706 & 0.720 &
+{0.014}\tabularnewline
+hclust\_complete & 0.484 & 0.521 & {0.037} & 0.705 & 0.734 &
+{0.029}\tabularnewline
+spectral\_M10 & 0.483 & 0.487 & {0.004} & 0.678 & 0.667 &
+{-0.011}\tabularnewline
+spectral\_M20 & 0.482 & 0.472 & {-0.01} & 0.668 & 0.664 &
+{-0.004}\tabularnewline
+spectral\_M8 & 0.456 & 0.463 & {0.007} & 0.655 & 0.659 &
+{0.004}\tabularnewline
+hclust\_single & 0.449 & 0.475 & {0.026} & 0.719 & 0.729 &
+{0.01}\tabularnewline
+spectral\_M30 & 0.446 & 0.526 & {0.08} & 0.646 & 0.697 &
+{0.051}\tabularnewline
+fuzzy\_5 & 0.428 & 0.462 & {0.034} & 0.623 & 0.647 &
+{0.024}\tabularnewline
+fuzzy\_10 & 0.427 & 0.448 & {0.021} & 0.623 & 0.636 &
+{0.013}\tabularnewline
+hclust\_centroid & 0.427 & 0.531 & {0.104} & 0.725 & 0.767 &
+{0.042}\tabularnewline
+hclust\_median & 0.376 & 0.483 & {0.107} & 0.672 & 0.702 &
+{0.03}\tabularnewline
+spectral\_M2 & 0.365 & 0.318 & {-0.047} & 0.587 & 0.576 &
+{-0.011}\tabularnewline
 \bottomrule
 \end{longtable}
 
-\subsubsection{Odchylenia standardowe}\label{odchylenia-standardowe}
-
 \begin{longtable}[]{@{}lrrrr@{}}
 \toprule
-& Rand index & Rand index - standardized & FM index & FM index -
-standardized\tabularnewline
+Algorithm & RA & RA - st. data & FM & FM - st. data\tabularnewline
 \midrule
 \endhead
-hclust\_single & 0.4356553 & 0.4384972 & 0.2402862 &
-0.2426036\tabularnewline
-genie\_0.8 & 0.4047805 & 0.4168118 & 0.2247797 &
-0.2250069\tabularnewline
-hclust\_centroid & 0.3857390 & 0.3754615 & 0.1743469 &
-0.1608609\tabularnewline
-hclust\_average & 0.3701044 & 0.3708732 & 0.1808313 &
-0.1799328\tabularnewline
-hclust\_wardD2 & 0.3402335 & 0.3572204 & 0.1806137 &
-0.1896394\tabularnewline
-hclust\_complete & 0.3380663 & 0.3255163 & 0.1710417 &
-0.1639302\tabularnewline
-hclust\_wardD & 0.3344786 & 0.3401046 & 0.1857183 &
-0.1878137\tabularnewline
-fuzzy\_default & 0.3320177 & 0.3222439 & 0.1817340 &
-0.1754243\tabularnewline
-hclust\_mcquitty & 0.3319233 & 0.3183166 & 0.1715432 &
-0.1625418\tabularnewline
-fuzzy\_2 & 0.3265900 & 0.3275848 & 0.1796710 & 0.1785192\tabularnewline
-hclust\_median & 0.3161102 & 0.3269948 & 0.1673730 &
-0.1470067\tabularnewline
-kmeans & 0.3042093 & 0.3178012 & 0.1588942 & 0.1664223\tabularnewline
-spectral\_M10 & 0.2820491 & 0.3102590 & 0.1667887 &
-0.1694765\tabularnewline
-fuzzy\_10 & 0.2816638 & 0.2801918 & 0.1814535 & 0.1808211\tabularnewline
-spectral\_M20 & 0.2802085 & 0.3128944 & 0.1682261 &
-0.1859292\tabularnewline
-fuzzy\_5 & 0.2780467 & 0.2771205 & 0.1691505 & 0.1746607\tabularnewline
-genie\_0.5 & 0.2393434 & 0.2874893 & 0.1613863 &
-0.1846406\tabularnewline
-spectral\_M5 & 0.2382938 & 0.2533773 & 0.1455755 &
-0.1465363\tabularnewline
-genie\_0.2 & 0.2346437 & 0.2630948 & 0.1454990 &
-0.1644472\tabularnewline
-spectral\_Mk & 0.2330000 & 0.2066511 & 0.1224123 &
-0.1257998\tabularnewline
-genie\_0.3 & 0.2157801 & 0.2474490 & 0.1492426 &
-0.1687012\tabularnewline
-spectral\_M2 & 0.2089354 & 0.2181780 & 0.1252713 &
-0.1433714\tabularnewline
+hclust\_single & 0.438 & 0.436 & 0.243 & 0.240\tabularnewline
+genie\_0.8 & 0.417 & 0.405 & 0.225 & 0.225\tabularnewline
+hclust\_centroid & 0.375 & 0.386 & 0.161 & 0.174\tabularnewline
+hclust\_average & 0.371 & 0.370 & 0.180 & 0.181\tabularnewline
+hclust\_wardD2 & 0.357 & 0.340 & 0.190 & 0.181\tabularnewline
+hclust\_wardD & 0.340 & 0.334 & 0.188 & 0.186\tabularnewline
+fuzzy\_2 & 0.328 & 0.327 & 0.179 & 0.180\tabularnewline
+hclust\_median & 0.327 & 0.316 & 0.147 & 0.167\tabularnewline
+hclust\_complete & 0.326 & 0.338 & 0.164 & 0.171\tabularnewline
+fuzzy\_default & 0.322 & 0.332 & 0.175 & 0.182\tabularnewline
+hclust\_mcquitty & 0.318 & 0.332 & 0.163 & 0.172\tabularnewline
+kmeans & 0.318 & 0.304 & 0.166 & 0.159\tabularnewline
+spectral\_M20 & 0.313 & 0.280 & 0.186 & 0.168\tabularnewline
+spectral\_M10 & 0.310 & 0.282 & 0.169 & 0.167\tabularnewline
+spectral\_M12 & 0.291 & 0.291 & 0.165 & 0.158\tabularnewline
+genie\_0.5 & 0.287 & 0.239 & 0.185 & 0.161\tabularnewline
+spectral\_M30 & 0.282 & 0.321 & 0.168 & 0.186\tabularnewline
+fuzzy\_10 & 0.280 & 0.282 & 0.181 & 0.181\tabularnewline
+fuzzy\_5 & 0.277 & 0.278 & 0.175 & 0.169\tabularnewline
+spectral\_M15 & 0.277 & 0.269 & 0.171 & 0.155\tabularnewline
+spectral\_M8 & 0.265 & 0.250 & 0.146 & 0.138\tabularnewline
+genie\_0.2 & 0.263 & 0.235 & 0.164 & 0.145\tabularnewline
+spectral\_M5 & 0.253 & 0.238 & 0.147 & 0.146\tabularnewline
+genie\_0.3 & 0.247 & 0.216 & 0.169 & 0.149\tabularnewline
+spectral\_M2 & 0.218 & 0.209 & 0.143 & 0.125\tabularnewline
+spectral\_Mk & 0.207 & 0.233 & 0.126 & 0.122\tabularnewline
 \bottomrule
 \end{longtable}
+
+Na podstawie otrzymanych wyników można poczynić kilka obserwacji.
+
+\begin{itemize}
+\tightlist
+\item
+  Wartości obu indeksów, pomimo, że odbiegają od siebie, zachowują się
+  podobnie. Pomimo, że wartości są posortowane względem indeksu AR,
+  możemy zaobserwować (z nieznacznymi odstępstwami) wyraźny malejący
+  trend również dla kolumn odpowiadających indeksowi FM.
+\item
+  Wpływ standardyzacji zmiennych na zdecydowaną większość algorytmów
+  analizy skupień jest znikomy. Wartości różnicy dla danych
+  ustandaryzowanych zostały oznaczone kolorami: d \textless{}= -0.1 -
+  czerwony, -0.1 \textless{} d \textless{}= -0.05 - pomarańczowy, -0.05
+  \textless{} d \textless{} 0.05 - czarny, 0.05 \textless{}= d
+  \textless{} 0.1 - jasnoniebieski, 0.1 \textless{}= d - ciemnoniebieski
+  dla indeksu AR, natomiast połowa tych wartości dla indeksu FM. Różnice
+  znaczące
+\end{itemize}
+
+\includegraphics{raport_files/figure-latex/unnamed-chunk-4-1.pdf}
+\includegraphics{raport_files/figure-latex/unnamed-chunk-4-2.pdf}
 
 \subsection{Wyniki}\label{wyniki}
 

@@ -12,22 +12,27 @@ Zadanie polegało na zaimplementowaniu algorytmu spektralnego analizy skupień z
 * **Algorytm spektralny** z parametrem M:
     * M = 2 - *spectral_M2*
     * M = 5 - *spectral_M5*
+    * M = 8 - *spectral_M8*
     * M = 10 - *spectral_M10*
+    * M = 12 - *spectral_M12*
+    * M = 15 - *spectral_M15*
     * M = 20 - *spectral_M20*
+    * M = 30 - *spectral_M30*
     * M = k, gdzie k jest oczekiwaną liczbą skupień - *spectral_Mk*
 * **Algorytm k-średnich** z pakietu wbudowanego stats - *kmeans*
 * **Algorytm hierarchiczny hclust** z pakietu wbudowanego stats:
-    * różne sposoby tworzenie dendrogramu - *hclust_ward.D, hclust_ward.D2, hclust_single, hclust_complete, hclust_average,hclust_mcquitty, hclust_median, hclust_centroid*
+    * różne sposoby tworzenie dendrogramu - *hclust_ward.D, hclust_ward.D2, hclust_single, hclust_complete, hclust_average,hclust_mcquitty, hclust_median, hclust_centroid* oraz *hclust_centroid2*. Druga część nazwy odpowiada zastosowanemu wariantowi algorytmu. Dwa sposoby wywołania algorytmu *hclust centroid* wynikają z faktu, że w dokumentacji sugerowaną metodą obliczania odległości dla algorytmu jest nie zwyczajna odległość Euklidesowa realizowana przez funkcję *hclust_centroid*, a odległość Euklidesowa podniesiona do kwadratu (*hclust_centroid2*)
 * **Algorytm hclust2** z pakietu CRAN genie z parametrem gini (0 - 1):
     * gini = 0.2 - *genie_0.2*
     * gini = 0.3 (wartość domyślna) - *genie_0.3*
     * gini = 0.5 - *genie_0.5*
     * gini = 0.8 - *genie_0.8*
-* **Algorytm Fuzzy C-Means** - z parametrem fuzzyfier (> 1):
+* **Algorytm Fuzzy C-Means** z pakietu CRAN advclust - z parametrem fuzzyfier (> 1):
     * fuzzyfier = 1.5 (wartość domyślna) - *fuzzy_default*
     * fuzzyfier = 2 - *fuzzy_2*
     * fuzzyfier = 5 - *fuzzy_5*
     * fuzzyfier = 10 - *fuzzy_10*
+* Podjąłem również próbę zastosowania **algorytmu DBSCAN**, jednak ze względu na nadzwyczajną wrażliwość na parametry nie nadawał się on do wykorzystania w tak ogólnych testach.
     
 Skrótowe nazwy pojawiające się w powyższym będą używane do identyfikacji algorytmów również dalej.
 
@@ -39,7 +44,9 @@ Implementacja algorytmu spektralnego została zrealizowana jako pakiet R. Aby m�
 
 Foldery **benchmark** oraz **my_benchmark** zawierają odpowiednio dołączone do zadania zbiory benchmarkowe oraz zbiory wygenerowane jako część rozwiązania zadania (zostały one wygenerowane za pomocą plików **graph.R, labirynth.R oraz windows.R**). Uruchamianie zaimplementowanych algorytmów jest realizowane w pliku **benchmark_executor.R**. Uzyskane wyniki znajdują się odpowiednio w folderach **output** oraz **my_benchmark_output**, podzielone względem algorytmów. Wizualizacja wszystkich wyników jest załączona w pliku **full_results.html**. W dalszej części tego dokumentu skupię się na zebraniu w całość i opracowaniu wyników otrzymanych dla załączonych danych benchmarkowych.
 
-# Opracowanie wyników
+## Opracowanie wyników
+
+Porównanie otrzymanych wyników zostanie wykonane za pomocą wyznaczonych dla każdego rozwiązania skorygowanego indeksu Randa **(AR)** oraz indeksu Fowlkesa-Mallowsa **(FM)**.
 
 ```{R, echo = FALSE, message=FALSE}
 load_results <- function()
@@ -97,62 +104,6 @@ load_results_data <- function(results)
   results
 }
 
-calculate_indices <- function(results)
-{
-  constructIndexList <- function(resultList)
-  {
-    indexList <- list()
-    for (i in 1)
-    {
-      resultSet <- resultList[[i]]
-      for (j in 1:length(resultSet))
-      {
-        name <- names(resultSet)[j]
-        if (!stringi::stri_detect_regex(name, "(data_file)|(data)|(expert)"))
-        {
-          l <- list(randIndex = list(), fmIndex = list())
-          indexList[[name]] <- list(normal=l, standardized=l)
-        }
-      }
-    }
-    indexList
-  }
-  
-  calculate_indices_helper <- function(resultList, indexList, standardized)
-  {
-    for (i in 1:length(resultList))
-    {
-      resultSet <- resultList[[i]]
-      for (j in 1:length(resultSet))
-      {
-        name <- names(resultSet)[j]
-        if (!stringi::stri_detect_regex(name, "(data_file)|(data)|(expert)"))
-        {
-          randIndex <- mclust::adjustedRandIndex(resultSet$expert, resultSet[[name]])
-          fmIndex <- as.numeric(dendextend::FM_index(resultSet$expert, resultSet[[name]]))
-          
-          if (!standardized)
-          {
-            indexList[[name]]$normal$randIndex[[i]] <- randIndex
-            indexList[[name]]$normal$fmIndex[[i]] <- fmIndex
-          }
-          else
-          {
-            indexList[[name]]$standardized$randIndex[[i]] <- randIndex
-            indexList[[name]]$standardized$fmIndex[[i]] <- fmIndex
-          }
-        }
-      }
-    }
-    indexList
-  }
-  
-  indexList <- constructIndexList(results$normal)
-  indexList <- calculate_indices_helper(results$normal, indexList, FALSE)
-  indexList <- calculate_indices_helper(results$standardized, indexList, TRUE)
-  indexList
-}
-
 calculate_indices_df <- function(results)
 {
   indices <- data.frame()
@@ -191,97 +142,131 @@ results <- load_results()
 results <- load_results_data(results)
 
 indices <- calculate_indices_df(results)
-#indices <- calculate_indices(results)
 ```
 
-## Zagregowane indeksy Randa i FM
+### Zagregowane indeksy Randa i FM
 
-### Średnie
+Dla dostarczonych danych benchmarkowych obliczone zostały średnie wartości indeksów AR i FM. Porównane zostały one również z wartościami tych indeksów dla danych ustandaryzowanych, z uwzględnieniem zmiany spowodowanej przez standardyzację. Zestawienie otrzymanych wyników znajduje się w poniższych tabelach. Zostały one posortowane poczynając od największych wartości dla indeksu AR i zaokrąglone do trzech cyfr po przecinku.
+
 
 ```{r, echo=FALSE, message=FALSE, results='asis'}
 library(dplyr)
+library(kableExtra)
 
-# aggregateIndices <- function(indices, operation = mean)
-# {
-#   resultMatrix <- matrix(nrow = length(indices), ncol = 4)
-#   row.names(resultMatrix) <- character(length(indices))
-#   colnames(resultMatrix) <- c("Rand index", "Rand index - standardized",
-#                               "FM index", "FM index - standardized")
-#   
-#   for (i in 1:length(indices))
-#   {
-#     algorithm_name <- names(indices)[i]
-#     
-#     normalIndices <- indices[[i]]$normal
-#     standardizedIndices <- indices[[i]]$standardized
-#     
-#     row.names(resultMatrix)[i] <- algorithm_name
-#     
-#     resultMatrix[i, 1] = operation(unlist(normalIndices$randIndex))
-#     resultMatrix[i, 2] = operation(unlist(standardizedIndices$randIndex))
-#     resultMatrix[i, 3] = operation(unlist(normalIndices$fmIndex))
-#     resultMatrix[i, 4] = operation(unlist(standardizedIndices$fmIndex))
-#   }
-#   df <- as.data.frame(resultMatrix)
-#   resultMatrix <- as.matrix(df[order(df[[1]], decreasing = TRUE),])
-#   
-#   resultMatrix
-# }
-
-aggregateIndices_df <- function(indices, operation = mean)
+aggregateIndices_df <- function(indices, operation = mean, differences = TRUE)
 {
   randNormal <- indices %>%
       filter(Index == "rand" & Standardized == TRUE) %>%
       group_by(Algorithm) %>%
-      summarize("RA" = round(operation(Value), 2))
+      summarize("RA" = round(operation(Value), 3))
   randSt <- indices %>%
       filter(Index == "rand" & Standardized == FALSE) %>%
       group_by(Algorithm) %>%
-      summarize("RA - standardized" = round(operation(Value), 2))
+      summarize("RAtmp" = round(operation(Value), 3))
   fmNormal <- indices %>%
       filter(Index == "fm" & Standardized == TRUE) %>%
       group_by(Algorithm) %>%
-      summarize("FM" = round(operation(Value), 2))
+      summarize("FM" = round(operation(Value), 3))
   fmSt <- indices %>%
       filter(Index == "fm" & Standardized == FALSE) %>%
       group_by(Algorithm) %>%
-      summarize("FM - standardized" = round(operation(Value), 2))
+      summarize("FMtmp" = round(operation(Value), 3))
 
+  gen_color <- function(diffValue, gap) ifelse(diffValue >= gap, "blue", 
+                                          ifelse(diffValue >= gap/2, "cornflowerblue", 
+                                            ifelse(diffValue <= -gap, "red", 
+                                              ifelse(diffValue <= -gap/2, "orange", 
+                                              "black"))))
+  
   resultView <- randNormal %>%
     inner_join(randSt) %>%
     inner_join(fmNormal) %>%
     inner_join(fmSt) %>%
-    arrange(-RA)
+    mutate("RA - difference" = kableExtra::cell_spec(round(RAtmp - RA, 3), "html", align = "r",
+                                                color = gen_color(round(RAtmp- RA, 3), 0.1))) %>%
+    rename("RA - st. data" = RAtmp) %>%
+    mutate("FM - difference" = kableExtra::cell_spec(round(FMtmp - FM, 3), "html", align = "r",
+                                                color = gen_color(round(FMtmp - FM, 3), 0.05))) %>%
+    rename("FM - st. data" = FMtmp)
+  
+  resultView <- if(differences) 
+    resultView %>%
+      select("Algorithm",
+             "RA", "RA - st. data", "RA - difference",
+             "FM", "FM - st. data", "FM - difference")
+  else
+    resultView %>%
+      select("Algorithm",
+             "RA", "RA - st. data", 
+             "FM", "FM - st. data")
 
-  #as.matrix(resultView)
-  resultView
+  resultView %>%
+    arrange(-RA)
 }
-# 
-# #knitr::kable(aggregateIndices(indices, mean))
-knitr::kable(aggregateIndices_df(indices, mean))
+
+knitr::kable(aggregateIndices_df(indices, mean),"markdown",
+             caption = "Średnie wartości indeksów",
+             escape = FALSE,
+             align = c("lcccccc"))
 ```
 
-### Odchylenia standardowe
+Na podstawie otrzymanych wyników można poczynić kilka obserwacji.
+
+* Wartości obu indeksów, pomimo, że odbiegają od siebie, zachowują się podobnie. Pomimo, że wartości są posortowane względem indeksu AR, możemy zaobserwować (z nieznacznymi odstępstwami) wyraźny malejący trend również dla kolumn odpowiadających indeksowi FM. W dalszej części dokumentu skupimy się na "rankingu" tworzonym przez indeks AR.
+* Wpływ standardyzacji zmiennych na zdecydowaną większość algorytmów analizy skupień jest znikomy. Wartości różnicy $d$ dla danych ustandaryzowanych zostały oznaczone kolorami: 
+    * $d \leq -0.1$ - czerwony, 
+    * $-0.1 \le d \leq -0.05$ - pomarańczowy, 
+    * $-0.05 \le d \le 0.05$ - czarny, 
+    * $0.05 \leq d \le 0.1$  - jasnoniebieski, 
+    * $0.1 \leq d$ - ciemnoniebieski  
+dla indeksu AR, natomiast połowa tych wartości dla indeksu FM. 
+
+    Różnice znaczące (oznaczone kolorami innymi niż czarny) występują bardzo rzadko. Łatwo też zauważyć, że zdarzają się one zwykle w przypadku algorytmów "gorszych", o niższych wartościach indeksóW - najczęściej źle skalibrowanych (złe parametry) lub po prostu działających jedynie w szczególnych przypadkach. Niemniej jednak, sytuacje, gdy standardyzacja przynosi zły efekt praktycznie nie występują - przeważająca większość różnic ma znak dodatni.
+* Dobrze (uniwersalnie) skalibrowany algorytm genie osiąga o wiele lepsze wyniki niż którykolwiek z innych testowanych algorytmów. Proponowany przez twórców parametr gini równy 0.3 rzeczywiście osiąga uniwersalnie najlepsze wyniki. Delikatne odchylenia od tej wartości nadal osiągają uniwersalnie zadowalające wyniki. Jednak nawet z paremetrem gini tak dużym jak 0.8 algorytm ten jest uniwersalnie lepszy od większej części innych algorytmów, natomiast ma swoją niszę - są przypadki, dla których generuje on rozwiązanie najlepsze.
+* Tradycyjne algorytmy hierarchiczne osiągają bardzo rozbieżne wyniki w zależności od zastosowanej metody. Najlepsze z nich okazują się te oparte na algorytmie Warda, natomiast zdecydowanie najgorszy - algorytm medianowy. Znajdujący się ponad nim algorytm centroidowy bardzo dużo zyskuje na przekazaniu mu kwadratów odległości - algorytm *hclust_centroid2* osiąga znacznie lepsze wyniki niż *hclust_centroid*.
+* Algorytm spektralny osiąga przeciętne wyniki. Wartość parametru M (liczby sąsiadów) ma dla niego duże znaczenie - wartości rzędu kilkunastu okazały się działać najlepiej, okazując się lepsze od tradycyjnego algorytmu k-średnich. Dobrym pomysłem okazało się również uzależnienie parametru M od liczby poszukiwanych skupień. Bardzo małe oraz bardzo duże wartości M powodują spadek ogólnej jakości algorytmu, ale mają swoją niszę. Wyjątkiem jest M równe (oraz mniejsze niż) 2 - wyniki w ten sposób otrzymane okazują się być bardzo złej jakości. Dużą wadą algorytmu jest też długi czas wykonania w przypadku dużych zbiorów danych, związany głównie z czasochłonnym procesem znajdowania wektorów własnych.
+* Algorytm Fuzzy C-Means dla wartości fuzzyfiera zbliżonych do domyślnej (1.5) osiąga bardzo dobre wyniki, chociaż nadal bardzo daleko mu do algorytmu gini. Zbytni wzrost fuzzyfiera powoduje jednak znaczny spadek jakości algorytmu. Podobnie jak algorytm spektralny, czas wykonania dla dużych zbiorów danych może być długi (zależnie od prędkości zbieżności).
+
+Obliczyłem również wartości odchylenia standardowego dla wszystkich indeksów.
 
 ```{r, echo=FALSE, message=FALSE, results='asis'}
-#knitr::kable(aggregateIndices(indices, sd))
-knitr::kable(aggregateIndices_df(indices, sd))
+knitr::kable(aggregateIndices_df(indices, sd, differences = FALSE), "markdown",
+             caption = "Odchylenie standardowe wartości indeksów",
+             escape = FALSE,
+             align = c("lcccc"))
 ```
+
+Również stąd możemy wyciągnąć użyteczne informacje:
+
+* Wartości odchylenia standardowego dla większości algorytmów są stosunkowo duże. Pokazuje to, że są one wrażliwe na wybranie dobrego przypadku użycia dla danego algorytmu.
+* Górna część tabeli obejmuje algorytmy "wyspecjalizowane". Algorytm *hclust_single*, pomimo osiągania ogólnie złych wyników, okazuje się jednak mieć potencjał w bardzo wielu przypadkach - podobnie jak większość algorytmów hierarchicznych. Zgodnie ze wcześniejszym stwierdzeniem, do grupy "specjalistów" należy również algorytm *genie_0.8*.
+* Dolna część tabeli wskazuje na osiąganie w miarę zbliżonych wyników - jeśli szukamy algorytmu uniwersalnego, chcemy wybrać jeden z nich. Należy jednak uważać - o ile algorytm *spectral_k* i algorytmy z rodziny *genie* są świetnymi algorytmami uniwersalnymi, *spectral_M2* jest uniwersalnie beznadziejny.
+
+Następnym wykonanym przeze mnie krokiem było wykonanie wykresów skrzynkowych dla obu algorytmów.
 
 ```{r, echo=FALSE}
 boxplotIndices <- function(indices)
 {
   randNormal <- indices %>%
       filter(Index == "rand" & Standardized == TRUE)
-  bpm <- with(randNormal, reorder(Algorithm, -Value, FUN = median))
   
-  par(mar=c(7,5,1,1))
-  boxplot(Value ~ bpm, data = randNormal, las = 2, xlab = "", ylab = "Rand index value")
+  draw_boxplot <- function(df, label)
+  {
+    bpm <- with(df, reorder(Algorithm, -Value, FUN = median))
+    
+    par(mar=c(7,5,1,1))
+    boxplot(Value ~ bpm, data = df, las = 2, xlab = "", ylab = label)
+  }
+  
+  draw_boxplot(randNormal, "Rand index value")
   
   randSt <- indices %>%
       filter(Index == "rand" & Standardized == FALSE)
   fmNormal <- indices %>%
       filter(Index == "fm" & Standardized == TRUE)
+  
+  draw_boxplot(fmNormal, "FM index value")
+  
   fmSt <- indices %>%
       filter(Index == "fm" & Standardized == FALSE)
   
