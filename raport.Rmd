@@ -1,8 +1,11 @@
 ---
-output: pdf_document
+title: "PDRPy - Praca domowa nr 2"
 author: "Wawrzeńczyk Adam"
 date: "4 maja 2019"
-title: "PDRPy - Praca domowa nr 2"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 html_document: default
 ---
 
@@ -79,9 +82,9 @@ Na podstawie otrzymanych wyników można poczynić kilka obserwacji.
     * $-0.05 \le d \le 0.05$ - czarny, 
     * $0.05 \leq d \le 0.1$  - jasnoniebieski, 
     * $0.1 \leq d$ - ciemnoniebieski  
-dla indeksu AR, natomiast połowa tych wartości dla indeksu FM. 
+dla indeksu AR, natomiast połowa tych wartości dla indeksu FM (z uwagi na mniejsze wahania). 
 
-    Różnice znaczące (oznaczone kolorami innymi niż czarny) występują bardzo rzadko. Łatwo też zauważyć, że zdarzają się one zwykle w przypadku algorytmów "gorszych", o niższych wartościach indeksów - najczęściej źle skalibrowanych (złe parametry) lub po prostu działających jedynie w szczególnych przypadkach. Niemniej jednak, sytuacje, gdy standaryzacja przynosi zły efekt praktycznie nie występują - przeważająca większość różnic ma znak dodatni.
+    Różnice znaczące (oznaczone kolorami innymi niż czarny) występują bardzo rzadko. Łatwo też zauważyć, że zdarzają się one zwykle w przypadku algorytmów "gorszych", o niższych wartościach indeksów - najczęściej źle skalibrowanych (złe parametry) lub po prostu działających jedynie w szczególnych przypadkach. Niemniej jednak sytuacje, gdy standaryzacja przynosi dobry efekt praktycznie nie występują - przeważająca większość różnic ma znak ujemny.
 * Dobrze (uniwersalnie) skalibrowany algorytm genie osiąga o wiele lepsze wyniki niż którykolwiek z innych testowanych algorytmów. Proponowany przez twórców parametr gini równy 0.3 rzeczywiście osiąga uniwersalnie najlepsze wyniki. Delikatne odchylenia od tej wartości nadal osiągają uniwersalnie zadowalające wyniki. Jednak nawet z paremetrem gini tak dużym jak 0.8 algorytm ten jest uniwersalnie lepszy od większej części innych algorytmów, natomiast ma swoją niszę - są przypadki, dla których generuje on rozwiązanie najlepsze.
 * Tradycyjne algorytmy hierarchiczne osiągają bardzo rozbieżne wyniki w zależności od zastosowanej metody. Najlepsze z nich okazują się te oparte na algorytmie Warda, natomiast zdecydowanie najgorszy - algorytm medianowy. Znajdujący się ponad nim algorytm centroidowy bardzo dużo zyskuje na przekazaniu mu kwadratów odległości - algorytm *hclust_centroid2* osiąga znacznie lepsze wyniki niż *hclust_centroid*.
 * Algorytm spektralny osiąga przeciętne wyniki. Wartość parametru M (liczby sąsiadów) ma dla niego duże znaczenie - wartości rzędu kilkunastu okazały się działać najlepiej, okazując się lepsze od tradycyjnego algorytmu k-średnich. Dobrym pomysłem okazało się również uzależnienie parametru M od liczby poszukiwanych skupień. Bardzo małe oraz bardzo duże wartości M powodują spadek ogólnej jakości algorytmu, ale mają swoją niszę. Wyjątkiem jest M równe (oraz mniejsze niż) 2 - wyniki w ten sposób otrzymane okazują się być bardzo złej jakości. Dużą wadą algorytmu jest też długi czas wykonania w przypadku dużych zbiorów danych, związany głównie z czasochłonnym procesem znajdowania wektorów własnych.
