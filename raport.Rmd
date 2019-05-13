@@ -242,7 +242,7 @@ Również stąd możemy wyciągnąć użyteczne informacje:
 * Górna część tabeli obejmuje algorytmy "wyspecjalizowane". Algorytm *hclust_single*, pomimo osiągania ogólnie złych wyników, okazuje się jednak mieć potencjał w bardzo wielu przypadkach - podobnie jak większość algorytmów hierarchicznych. Zgodnie ze wcześniejszym stwierdzeniem, do grupy "specjalistów" należy również algorytm *genie_0.8*.
 * Dolna część tabeli wskazuje na osiąganie w miarę zbliżonych wyników - jeśli szukamy algorytmu uniwersalnego, chcemy wybrać jeden z nich. Należy jednak uważać - o ile algorytm *spectral_k* i algorytmy z rodziny *genie* są świetnymi algorytmami uniwersalnymi, *spectral_M2* jest uniwersalnie beznadziejny.
 
-Następnym wykonanym przeze mnie krokiem było wykonanie wykresów skrzynkowych dla obu algorytmów.
+Następnym wykonanym przeze mnie krokiem było wykonanie wykresów skrzynkowych dla obu indeksów, tym razem uporządkowane względem mediany.
 
 ```{r, echo=FALSE}
 boxplotIndices <- function(indices)
@@ -273,6 +273,12 @@ boxplotIndices <- function(indices)
 }
 boxplotIndices(indices)
 ```
+
+Płyną z nich kolejne wnioski:
+
+* Po raz kolejny algorytmy *gini* wyraźnie wyróżniają się spośród reszty. Charakteryzuje je również bardzo wysoka mediana - przeciętny znaleziony wynik jest wyjątkowo dobry i często okaże się lepszy od algorytmu, który na danym zbiorze danych działa dużo lepiej niż zwykle.
+* Najdłuższe słupki na wykresie odpowiadają wcześniej zidentyfikowanym "specjalistom", a najkrótsze - algorytmom uniwersalnym.
+* Algorytm *spectral_Mk*, pomimo generalnie dobrego działania, nigdy nie zwraca rozwiązań poprawnych lub bardzo zbliżonych według indeksu Randa.
 
 ## Wyniki
 
