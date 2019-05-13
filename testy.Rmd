@@ -1,0 +1,82 @@
+---
+title: "Metoda spektralna - testy"
+author: "Wawrzeńczyk Adam"
+date: "13 maja 2019"
+output: pdf_document
+---
+
+# Zbiory testowe
+
+Przygotowane zostały trzy zbiory testowe:
+
+* **graph** - złożony z kształtów geometrycznych zbiór na wzór grafu $K_4$ (chmurki gaussowskie i proste).
+* **labirynth** - kafelkowy układ na kształt prostego labiryntu
+* **windows** - kafelkowy układ złożony z ramki oraz czterech skupień w środku
+
+Wszystkie zbiory są syntetyczne i umieszczone w $R^2$. W skład zbioru testowego wchodzi plik .R generujący go, plik .data.csv zawierający punkty zbioru i .labels0.csv zawierający etykiety eksperckie.
+
+```{R, echo = FALSE, message=FALSE}
+source("helper.R")
+
+results <- load_results("my_benchmark_output")
+results <- load_results_data(results, "my_benchmark")
+
+indices <- calculate_indices_df(results)
+```
+# Wyniki
+
+W tej sekcji przedstawione zostaną wyniki dla danych nieustandaryzowanych. Dla każdego zbioru danych zostaną policzone indeksy AR oraz FM. Porównane zostaną one z wynikami otrzymanymi dla innych algorytmów, a następnie wyniki uzyskane przez algorytmy spektralne zostaną przedstawione na wykresach.
+
+```{r, echo=FALSE, message=FALSE, results='asis', fig.width=6, fig.height=4}
+get_kable <- function(i) 
+{
+  print(knitr::kable(filter_indices(indices, i), "markdown",
+           escape = FALSE,
+           align = c("lcc")))
+}
+get_plot <- function(i)
+{
+  plot_results(results$normal, plotId = i, algorithmRegex = "spectral")
+}
+```
+
+## Zbiór graph
+
+```{r, echo=FALSE, message=FALSE, results='asis'}
+get_kable(1)
+```
+
+Jest to zbiór, z którym algorytmy spektralne radzą sobie wyjątkowo dobrze - z niektórymi parametrami pokonują nawet algorytm *genie*. Dosyć słabo radzą sobie z nim za to algorytmy hierarchiczne.
+
+```{r, echo=FALSE, message=FALSE, fig.width=6, fig.height=4}
+get_plot(1)
+```
+
+\pagebreak
+
+## Zbiór labirynth
+
+```{r, echo=FALSE, message=FALSE, results='asis'}
+get_kable(2)
+```
+
+Ten zbiór danych sprawia algorytmom spektralnym nieco większe problemy. Jedna z odmian nadal jest w czołówce, jest jednak gorsza od algorytmów *hclust_single* oraz *genie_0.8* - co ciekawe, są to algorytmy, które zwykle nie mogą pochwalić się dobrymi wynikami.
+
+```{r, echo=FALSE, message=FALSE, fig.width=6, fig.height=4}
+get_plot(2)
+```
+
+\pagebreak
+
+## Zbiór windows
+
+```{r, echo=FALSE, message=FALSE, results='asis'}
+get_kable(3)
+```
+
+Poza grupą trzech algorytmów, które znalazły poprawne rozwiązanie, większość algorytmów poradziła sobie z tym zbiorem bardzo słabo. Algorytmy spektralne są jednak wyraźnie najlepsze sposród tej grupy.
+
+```{r, echo=FALSE, message=FALSE, fig.width=6, fig.height=4}
+get_plot(3)
+```
+
